@@ -4,7 +4,7 @@ test:
 
 dependencies:
     pre:
-        # Install mbed-cli
+        # Install mbed-cli 
         - cd ../ && ls
         - cd ../ && git clone https://github.com/ARMmbed/mbed-cli.git
         - cd ../mbed-cli && sudo -H pip install -e .
@@ -19,5 +19,5 @@ dependencies:
         - ln -s ../../../../../../mbedtls/ ../mbed-tls-sample/mbed-os/core/mbedtls/importer/TARGET_IGNORE/mbedtls
         - cd ../mbed-tls-sample/mbed-os/core/mbedtls/importer/ && make
     override:
-        # Install the missing python packages
+        # Install python packages
         - cd ../mbed-tls-sample/mbed-os && sudo -H pip install -r requirements.txt

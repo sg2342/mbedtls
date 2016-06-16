@@ -17,7 +17,7 @@ dependencies:
         - cd ../mbed-tls-sample/ && mbed deploy
         # Import mbedtls current revision
         - ln -s ../../../../../../mbedtls/ ../mbed-tls-sample/mbed-os/core/mbedtls/importer/TARGET_IGNORE/mbedtls
-        - cd mbed-os/core/mbedtls/importer/ && make
+        - cd ../mbed-tls-sample/mbed-os/core/mbedtls/importer/ && make
     override:
         # Install the missing python packages
         - cd ../mbed-tls-sample/mbed-os && pip install -r requirements.txt

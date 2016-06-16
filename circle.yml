@@ -7,7 +7,7 @@ dependencies:
         # Install mbed-cli
         - cd ../ && ls
         - cd ../ && git clone https://github.com/ARMmbed/mbed-cli.git
-        - cd ../mbed-cli && sudo pip install -e .
+        - cd ../mbed-cli && sudo -H pip install -e .
         # Install gcc-arm
         - sudo add-apt-repository -y ppa:terry.guo/gcc-arm-embedded
         - sudo apt-get -y update
@@ -20,4 +20,4 @@ dependencies:
         - cd ../mbed-tls-sample/mbed-os/core/mbedtls/importer/ && make
     override:
         # Install the missing python packages
-        - cd ../mbed-tls-sample/mbed-os && pip install -r requirements.txt
+        - cd ../mbed-tls-sample/mbed-os && sudo -H pip install -r requirements.txt

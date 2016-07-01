@@ -5,7 +5,6 @@ test:
 dependencies:
     pre:
         # Install mbed-cli
-        - cd ../ && ls
         - cd ../ && git clone https://github.com/ARMmbed/mbed-cli.git
         - cd ../mbed-cli && sudo -H pip install -e .
         # Install gcc-arm

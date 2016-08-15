@@ -205,23 +205,83 @@ int mbedtls_asn1_write_int( unsigned char **p, unsigned char *start, int val )
     int ret;
     size_t len = 0;
 
-    // TODO negative values and values larger than 128
-    // DER format assumes 2s complement for numbers, so the leftmost bit
-    // should be 0 for positive numbers and 1 for negative numbers.
     //
-    if( *p - start < 1 )
-        return( MBEDTLS_ERR_ASN1_BUF_TOO_SMALL );
+    // a better world:
+    //
+    // the loop below terminates after at most sizeof(int)+1 iterations:
+    // because of
+    //
+    //    P >> (8 * sizeof(int)) == 0 for all P >= 0
+    // and
+    //    N >> (8 * sizeof(int)) == -1 for all N < 0
+    //
+    // it is valid to encode and then right shift 8 bits until the result
+    // of the shift operation is either 0 or -1.
+    //
+    // since ASN.1 BER/DER Integer encoding is specified as
+    // two's complement, MSB of leading payload octet must be
+    // 1 for negative and 0 for non-negative integers.
+    //
+    // 7 bit right shift of val and check for 0 or -1 as termination
+    // condition ensures that a padding octet is written if the
+    // MSB of the encoded octet does not match the sign of
+    // the input.
+    //
+    //  for ( ;; )
+    //  {
+    //      if( *p - start < 1 )
+    //          return( MBEDTLS_ERR_ASN1_BUF_TOO_SMALL );
+    //      *--(*p) = (unsigned char)(val & 0xFF);
+    //      len += 1;
+    //
+    //      if( val >> 7 == 0 || val >> 7 == -1 )
+    //          break;
+    //
+    //      val >>= 8;
+    //  }
+    //
+    // reality:
+    //
+    // 1) Arithmethic right shift on signed integers is
+    //    implementation-defined behaviour for negative integers.
+    //
+    // one can emulate arithmetic right shift with sign extension for
+    // negative input by using a logical right shift and then set the
+    // shifted-in bits to one.
+    //
+    // but since
+    // 2) The ISO C standard allows three encoding methods for signed
+    //    integers: two's complement, one's complement and sign/magnitude.
+    //
+    // the two's complement encoding has to be ensured.
+    //
 
-    len += 1;
-    *--(*p) = val;
+    unsigned int v, fix7, fix8, cmp;
 
-    if( val > 0 && **p & 0x80 )
+    if( val < 0 ) {
+        v = ~((unsigned int) -val) + 1;
+        fix7 = 0xFE << (sizeof(int) -1) * 8;
+        fix8 = 0xFF << (sizeof(int) -1) * 8;
+        cmp = -1;
+    } else {
+        v = (unsigned int)val;
+        fix7 = 0;
+        fix8 = 0;
+        cmp = 0;
+    }
+
+    for( ;; )
     {
         if( *p - start < 1 )
             return( MBEDTLS_ERR_ASN1_BUF_TOO_SMALL );
 
-        *--(*p) = 0x00;
+        *--(*p) = (unsigned char) (v & 0xFF);
         len += 1;
+
+        if( (v >> 7 | fix7) == cmp )
+                break;
+
+        v = v >> 8 | fix8;
     }
 
     MBEDTLS_ASN1_CHK_ADD( len, mbedtls_asn1_write_len( p, start, len ) );
